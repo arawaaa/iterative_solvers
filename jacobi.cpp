@@ -1,9 +1,10 @@
 #include "jacobi.h"
 
-Jacobi::Jacobi(int process, struct neighbors adj, int dimensions[2], int global_pos[2])
-    : process(process), grid(dimensions[0] + 2, std::vector<float>(dimensions[1] + 2)) // put in the boundary/shared areas
+Jacobi::Jacobi(int process, struct neighbors adj, std::pair<int, int> dimensions, std::pair<float, float> global_pos)
+    : process(process), global_pos(global_pos)
+    , grid(get<0>(dimensions) + 2, std::vector<float>(get<1>(dimensions) + 2)) // put in the boundary/shared areas
 {
-    if (dimensions[0] == 0 || dimensions[1] == 0)
+    if (get<0>(dimensions) == 0 || get<1>(dimensions) == 0)
         throw std::runtime_error("Empty dimensions prohibited.");
 
     boundary_conditions[left] = (neighbors[left] = adj.left) != -1;
@@ -58,10 +59,10 @@ void Jacobi::exchangeData() {
 float Jacobi::redBlackSolve()
 {
     float maxErr = 0.0;
-    for (int iter : {0, 1}) {
+    for (int offset : {0, 1}) {
         #pragma omp parallel for reduction(max:maxErr)
         for (int i = 1; i < grid.size() - 1; i++) {
-            for (int j = 1 + (i + iter) % 2; j < grid[0].size() - 1; j += 2) {
+            for (int j = 1 + (i + offset) % 2; j < grid[0].size() - 1; j += 2) {
                 auto prev = grid[i][j];
                 grid[i][j] = (grid[i][j + 1] + grid[i][j - 1] + grid[i - 1][j] + grid[i + 1][j]) / 4.0;
                 maxErr = std::max(maxErr, prev);

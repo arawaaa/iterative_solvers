@@ -25,13 +25,16 @@ enum direction {
  * We calculate roughly half of the squares from their neighbors
  * in a checkerboard pattern, and then use the updated values
  * for the remaining calculations
+ *
+ * Boundary values are those exactly on the boundary of the square,
+ * and are represented by extra values on the grid
  */
 class Jacobi
 {
     int neighbors[4];
     int process;
-
     bool boundary_conditions[4];
+    std::pair<float, float> global_pos;
 
     std::vector<std::vector<float>> grid;
 
@@ -64,7 +67,7 @@ class Jacobi
         return {res, s};
     }
 public:
-    Jacobi(int process, struct neighbors adj, int dimensions[2], int global_pos[2]);
+    Jacobi(int process, struct neighbors adj, std::pair<int, int> dimensions, std::pair<float, float> global_pos);
 
     ~Jacobi();
 
